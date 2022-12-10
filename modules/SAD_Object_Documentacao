@@ -1,0 +1,159 @@
+VERSION 1.0 CLASS
+BEGIN
+  MultiUse = -1  'True
+END
+Attribute VB_Name = "SAD_Object_Documentacao"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = False
+Attribute VB_Exposed = False
+Option Compare Database
+Private Nome As String
+Private NomeProcedimento As String
+Private Escopo As String
+Private TipoProcedimento As String
+Private Parametros As String
+Private Retorno As String
+Private TipoObjeto As String
+Private thisLinhaFuncao As String
+Public Property Get GetNome() As String
+    GetNome = Nome
+End Property
+Public Property Get GetNomeProcedimento() As String
+    GetNomeProcedimento = NomeProcedimento
+End Property
+Public Property Get GetEscopo() As String
+    GetEscopo = Escopo
+End Property
+Public Property Get GetTipoProcedimento() As String
+    GetTipoProcedimento = TipoProcedimento
+End Property
+Public Property Get GetParamentros() As String
+    GetParamentros = Parametros
+End Property
+Public Property Get GetRetorno() As String
+    GetRetorno = Retorno
+End Property
+Public Property Get GetTipoObjeto() As String
+    GetTipoObjeto = TipoObjeto
+End Property
+Public Sub SetNome(NomeModulo As String)
+    Nome = NomeModulo
+End Sub
+
+Public Sub SetObjectDocumentacao(LinhaFuncao As String, NomeObjeto As String, iTipoObjeto As Integer)
+    thisLinhaFuncao = LinhaFuncao
+    Nome = NomeObjeto
+    If iTipoObjeto = 1 Then
+        TipoObjeto = "Módulo"
+    Else
+        TipoObjeto = "Classe"
+    End If
+    SetNomeProcedimento
+    SetEscopo
+    SetParametros
+    SetRetorno
+    AtualizaOuInsereRegistro
+End Sub
+Private Sub SetNomeProcedimento()
+    Dim IndiceInicialTextoProcurado As Integer
+    Dim TamanhoNomeAte As Integer
+    Dim sNome As String
+    
+    IndiceInicialTextoProcurado = InStr(1, thisLinhaFuncao, " Function")
+    TipoProcedimento = "Função"
+    If IndiceInicialTextoProcurado = 0 Then
+        IndiceInicialTextoProcurado = InStr(1, thisLinhaFuncao, " Sub")
+        IndiceInicialTextoProcurado = InStr(IndiceInicialTextoProcurado, thisLinhaFuncao, "b ") + 2
+        TipoProcedimento = "Método"
+    Else
+        IndiceInicialTextoProcurado = InStr(IndiceInicialTextoProcurado, thisLinhaFuncao, "n ") + 2
+    End If
+    
+    
+    TamanhoNomeAte = InStr(IndiceInicialTextoProcurado, thisLinhaFuncao, "(") - IndiceInicialTextoProcurado
+    
+    If TamanhoNomeAte <= 0 Then Exit Sub
+    sNome = Trim(Mid(thisLinhaFuncao, IndiceInicialTextoProcurado, TamanhoNomeAte))
+    NomeProcedimento = sNome
+End Sub
+Private Sub SetEscopo()
+    Dim TamanhoNomeEscopo As Integer
+    Dim NomeEscopo As String
+    TamanhoNomeEscopo = InStr(1, thisLinhaFuncao, " ")
+    NomeEscopo = Mid(thisLinhaFuncao, 1, TamanhoNomeEscopo - 1)
+    
+    If NomeEscopo = "Sub" Or NomeEscopo = "Function" Then
+        NomeEscopo = "Public"
+    End If
+    If NomeEscopo = "Public" Then
+        NomeEscopo = "<<<---(Public)--->>>"
+    Else
+        NomeEscopo = ">>>---Privado---<<<"
+    End If
+    Escopo = NomeEscopo
+End Sub
+Private Sub SetParametros()
+    Dim IndiceParanteseAbertura, IndiceParanteseFechamento, TamanhoParamentro As Integer
+    IndiceParanteseAbertura = InStr(1, thisLinhaFuncao, "(") + 1
+    IndiceParanteseFechamento = InStr(1, thisLinhaFuncao, ")")
+    If IndiceParanteseFechamento <= 0 Then
+        IndiceParanteseFechamento = Len(thisLinhaFuncao)
+    End If
+    TamanhoParamentro = IndiceParanteseFechamento - IndiceParanteseAbertura
+    Parametros = Mid(thisLinhaFuncao, IndiceParanteseAbertura, TamanhoParamentro)
+    Parametros = Replace(Parametros, " As ", " do tipo ")
+    If Len(Parametros) < 2 Then
+        Parametros = "Sem Parametro"
+        Exit Sub
+    End If
+    Parametros = "{" & Parametros & "}"
+End Sub
+
+Private Sub SetRetorno()
+    Dim IndiceParanteseFechamento As Integer
+    Dim sRetorno As String
+    IndiceParanteseFechamento = InStr(1, thisLinhaFuncao, ")") + 1
+    sRetorno = Mid(thisLinhaFuncao, IndiceParanteseFechamento, Len(thisLinhaFuncao))
+    sRetorno = Replace(sRetorno, "As ", "Retorno do tipo ")
+    sRetorno = Trim(sRetorno)
+    If sRetorno = "" Then
+        Retorno = "Sem Retorno"
+    Else
+        Retorno = sRetorno
+    End If
+End Sub
+
+Private Sub AtualizaOuInsereRegistro()
+    Dim rs As DAO.Recordset
+    Set rs = CurrentDb.OpenRecordset("Select * from SAD_Documentacao_Modulos Where Nome='" & Nome & "' And NomeProcedimento='" & NomeProcedimento & "'")
+    If rs.EOF = True Then
+        rs.AddNew
+        rs.fields("Comentario") = "//"
+        rs.fields("Nome") = GetNome
+        rs.fields("NomeProcedimento") = GetNomeProcedimento
+        rs.fields("Escopo") = GetEscopo
+        rs.fields("TipoProcedimento") = GetTipoProcedimento
+        rs.fields("Paramentros") = GetParamentros
+        rs.fields("Retorno") = GetRetorno
+        rs.fields("TipoObjeto") = GetTipoObjeto
+        rs.fields("Ativo") = "Sim"
+        rs.Update
+    Else
+        If rs.fields("Comentario") = "//" Then
+            rs.edit
+            rs.fields("Comentario") = "//"
+            rs.fields("Nome") = GetNome
+            rs.fields("NomeProcedimento") = GetNomeProcedimento
+            rs.fields("Escopo") = GetEscopo
+            rs.fields("TipoProcedimento") = GetTipoProcedimento
+            rs.fields("Paramentros") = GetParamentros
+            rs.fields("Retorno") = GetRetorno
+            rs.fields("TipoObjeto") = GetTipoObjeto
+            rs.fields("Ativo") = "Sim"
+            rs.Update
+        End If
+        
+    End If
+End Sub
+

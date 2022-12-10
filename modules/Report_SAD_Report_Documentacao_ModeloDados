@@ -1,0 +1,20 @@
+VERSION 1.0 CLASS
+BEGIN
+  MultiUse = -1  'True
+END
+Attribute VB_Name = "Report_SAD_Report_Documentacao_ModeloDados"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = True
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = False
+Option Compare Database
+
+Private Sub Report_Close()
+On Error Resume Next
+    Forms!SAD_Documentacao_Modulos.Visible = True
+End Sub
+
+Private Sub Report_Load()
+On Error Resume Next
+    Forms!SAD_Documentacao_Modulos.Visible = False
+End Sub

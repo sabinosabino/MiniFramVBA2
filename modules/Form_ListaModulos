@@ -1,0 +1,28 @@
+VERSION 1.0 CLASS
+BEGIN
+  MultiUse = -1  'True
+END
+Attribute VB_Name = "Form_ListaModulos"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = True
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = False
+Option Compare Database
+
+Private Sub cmdExportar_Click()
+    Call ExtratorModulos.ComitarProjeto
+    MsgBox "Sucesso!"
+End Sub
+
+Private Sub Form_Load()
+    Dim Vbcoms As Object
+    Set Vbcoms = Application.VBE.ActiveVBProject.VBComponents
+    Dim texto As String
+    Dim obj As Object
+    texto = "Componentes"
+    For Each obj In Vbcoms
+        texto = texto & ";" & obj.Name
+    Next
+    
+    Me.lst.RowSource = texto
+End Sub

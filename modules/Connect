@@ -1,0 +1,114 @@
+VERSION 1.0 CLASS
+BEGIN
+  MultiUse = -1  'True
+END
+Attribute VB_Name = "Connect"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = False
+Attribute VB_Exposed = False
+Option Compare Database
+Private Provider As String
+Private ProviderMysqlServer As String
+Private Server As String
+Private DataBase As String
+Private User As String
+Private Pwd As String
+Private TypeProvider As Integer
+Dim conn As Object
+'DO PROJETO RDO SISTAC-------------------------------------------------------------
+'-----------------------------------------------------------------------------------
+Private Declare PtrSafe Function InternetGetConnectedStateEx Lib "wininet.dll" _
+                                                     (ByRef lpdwFlags As Integer, _
+                                                      ByVal lpszConnectionName As String, _
+                                                      ByVal dwNameLen As Integer, _
+                                                      ByVal dwReserved As Integer) _
+                                                      As Integer
+'-----------contexto
+'-----------------------------------------------
+Private Sub Class_Initialize()
+
+End Sub
+Private Sub setDataBase(p As PreConnection)
+    Server = p.Server
+    DataBase = p.DataBase
+    User = p.User
+    Pwd = p.Pwd
+    Provider = p.Provider
+    TypeProvider = p.TypeProvider
+End Sub
+
+Public Function PossuiConexao() As Boolean
+    Dim Ret As Integer
+    Ret = InternetGetConnectedStateEx(Ret, sConnType, 254, 0)
+    If Ret >= 1 Then
+        PossuiConexao = True
+    Else
+        PossuiConexao = False
+    End If
+End Function
+'END PROJETO RDO SISTAC-------------------------------------------------------------
+'-----------------------------------------------------------------------------------
+
+Private Function StringConnection() As String
+    Dim p As New PreConnection
+    Call setDataBase(p.GetPreConnection)
+    Select Case TypeProvider
+        'sql server
+        Case 1
+            StringConnection = GetStringSqlServer
+        'mysql
+        Case 2
+            StringConnection = GetStringMysql
+    End Select
+End Function
+Public Function GetTypeProvider() As Integer
+    
+End Function
+Private Function GetStringSqlServer() As String
+    
+    GetStringSqlServer = Provider _
+    & ";Server=" & Server _
+    & ";Database=" & DataBase _
+    & ";Uid=" & User _
+    & ";Pwd=" & Pwd & ";" _
+    & "trustservercertificate=Yes;" _
+    & "trusted_connection=No;" _
+    & ";Use Procedure for Prepare=1" _
+    & ";Auto Translate=True" _
+    & ";Packet Size=4096" _
+    & ";Use Encryption for Data=False" _
+    & ";Tag with column collation when possible=False;"
+    
+End Function
+Private Function GetStringMysql() As String
+    GetStringMysql = "Driver={MySQL ODBC 8.0 ANSI Driver};" _
+                              & "SERVER=" & Server & ";" _
+                              & "DATABASE=" & DataBase & ";" _
+                              & "UID=" & User & ";" _
+                              & "PASSWORD=" & Pwd & ";Option=3;"
+    
+End Function
+
+Public Function OpenConnection() As Object
+On Error GoTo catch
+        If conn Is Nothing Then
+            Set conn = VBA.CreateObject("ADODB.Connection")
+            conn.ConnectionString = StringConnection
+        End If
+        If conn.state = 0 Then
+            conn.Open
+        End If
+        Set OpenConnection = conn
+Exit Function
+catch:
+    Err.Raise Err.Number, "OpenConnection", Err.Description
+End Function
+
+Private Sub Class_Terminate()
+On Error Resume Next
+    If conn.state <> 0 Then
+        conn.Close
+    End If
+    Set conn = Nothing
+End Sub

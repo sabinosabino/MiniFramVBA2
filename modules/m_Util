@@ -1,0 +1,165 @@
+Attribute VB_Name = "m_Util"
+Option Compare Database
+Public Function NullForData(value As Variant, Optional tipo As Integer) As Variant
+'0=string, 1=numericos ou hora, 2 data
+    If IsNull(value) Or Len(value & "") = 0 Then
+        Select Case tipo
+        Case 0
+            NullForData = ""
+        Case 1
+            NullForData = 0
+        Case 2
+            NullForData = #1/1/1889#
+        End Select
+    Else
+        NullForData = value
+    End If
+End Function
+
+Public Function DateTimeServer(cn As Connect) As Date
+    Dim Sql As String
+    Dim dl As New DataDAO
+    Dim rs As Object
+    Sql = "SELECT CURRENT_TIMESTAMP;"
+    Set rs = dl.ExecuteSql(Sql, cn)
+        DateTimeServer = rs(0)
+        
+    Set rs = Nothing
+End Function
+Public Sub ocultaRibbon()
+    DoCmd.ShowToolbar "Ribbon", acToolbarNo
+End Sub
+Public Sub reexibeRibbon()
+    DoCmd.ShowToolbar "Ribbon", acToolbarYes
+End Sub
+Public Sub OpenFormProgressBar(process As Integer, msg As String)
+On Error GoTo catch
+    If Not CurrentProject.AllForms("ProgressBar").IsLoaded Then
+        DoCmd.OpenForm "ProgressBar"
+    End If
+        Form_ProgressBar.progress process, msg
+catch:
+    
+End Sub
+
+Public Sub MensagemSalvoComSucesso()
+    DoCmd.OpenForm "CaixaMensagemSalvoComSucesso"
+End Sub
+Public Function fncLocalizarArquivo(tipo As Byte) As String
+Dim fd As Object
+On Error GoTo trataerro
+'Set fd = Application.FileDialog(Val)
+Set fd = Application.FileDialog(tipo)
+With fd
+      .AllowMultiSelect = False
+      .ButtonName = "Selecionar"
+      .InitialFileName = "c:\"
+      .Title = "Selecione"
+End With
+If fd.Show = -1 Then
+    fncLocalizarArquivo = fd.SelectedItems(1)
+End If
+    Exit Function
+trataerro:
+    fncLocalizarPasta = ""
+End Function
+
+Public Function FormatCpf(value As String) As String
+    FormatCpf = Replace(Format(value, "###/###/###-##"), "/", ".")
+End Function
+Public Function FormatCNPJ(value As String) As String
+    FormatCNPJ = Replace(Format(value, "##--###--###/####-##"), "--", ".")
+End Function
+Public Function FormatCep(value As String) As String
+    FormatCep = Replace(Format(value, "##/###-###"), "/", ".")
+End Function
+Public Function GetTipeProvider() As Integer
+    GetTipeProvider = DLookup("Provider", "Connection")
+End Function
+
+Public Function DateToStringSqlServer(Data As Date) As String
+    DateToStringSqlServer = "'" & Format(Data, "yyyymmdd") & "'"
+End Function
+
+Public Function DateToStringAccess(Data As Date) As String
+    DateToStringAccess = "#" & Format(Data, "mm-dd-yyyy") & "#"
+End Function
+
+
+Public Function HourToStringAccess(Data As Date) As String
+    HourToStringAccess = "#" & Format(Data, "hh:mm:ss") & "#"
+End Function
+
+Public Sub AbrirFecharFormulario()
+    DoCmd.Close acForm, "SAD_Documentacao_Modulos"
+    DoCmd.OpenForm "SAD_Documentacao_Modulos"
+End Sub
+Public Function ConvertToArray(values As String) As Variant
+    Dim fields As String
+    If values = "" Then
+        fields = "Id,Nome"
+    Else
+        fields = values
+    End If
+    ConvertToArray = Split(fields, ",")
+End Function
+Public Function RetornaNomeCampo(ByVal values As String, Posicao As Integer) As String
+    Dim ArrayList As Variant
+    ArrayList = Split(values, ":")
+    If UBound(ArrayList) = 0 Then
+        RetornaNomeCampo = ArrayList(0)
+    Else
+         RetornaNomeCampo = ArrayList(Posicao)
+    End If
+End Function
+Public Function TrataCabecalho(values As String) As String
+    Dim ArrayList As Variant
+    Dim Limite As Integer
+    Dim i As Integer
+    Dim PreparaRetorno As String
+    ArrayList = Split(values, ",")
+    Limite = UBound(ArrayList)
+    For i = 0 To Limite
+        If PreparaRetorno = "" Then
+            PreparaRetorno = RetornaNomeCampo(ArrayList(i), 1)
+        Else
+            PreparaRetorno = PreparaRetorno & ";" & RetornaNomeCampo(ArrayList(i), 1)
+        End If
+    Next
+    TrataCabecalho = PreparaRetorno & ";"
+End Function
+Public Function TratarCamposListBox(ByVal campo As String) As String
+On Error GoTo catch
+Dim arrayresult() As String
+arrayresult = Split(campo, "/")
+If UBound(arrayresult) > 0 Then
+    TratarCamposListBox = arrayresult(0)
+Else
+    TratarCamposListBox = campo
+End If
+Exit Function
+catch:
+    TratarCamposListBox = campo
+End Function
+
+Public Function TratarValoresListBox(ByVal campo As String, ByVal value As String) As String
+On Error GoTo catch
+Dim arrayresult() As String
+arrayresult = Split(campo, "/")
+If UBound(arrayresult) > 0 Then
+Select Case arrayresult(1)
+    Case "D"
+        TratarValoresListBox = Format(value, "dd-mm-yyyy")
+    Case "M"
+        TratarValoresListBox = FormatCurrency(value, 2)
+    Case Else
+        TratarValoresListBox = value
+End Select
+Else
+    TratarValoresListBox = value
+End If
+Exit Function
+catch:
+    TratarValoresListBox = value
+End Function
+

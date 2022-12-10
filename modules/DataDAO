@@ -1,0 +1,72 @@
+VERSION 1.0 CLASS
+BEGIN
+  MultiUse = -1  'True
+END
+Attribute VB_Name = "DataDAO"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = False
+Attribute VB_Exposed = False
+Public Sub ExecuteSqlAction(Sql As String, cn As Connect)
+On Error GoTo catch
+    Dim rs As Object
+    Set rs = VBA.CreateObject("ADODB.Recordset")
+    
+    rs.Open Sql, cn.OpenConnection
+    
+    Set rs = Nothing
+    Exit Sub
+catch:
+    Err.Raise 4004, "ExecuteSqlAction", Err.Description
+End Sub
+Public Function ExecuteSql(Sql As String, cn As Connect, Optional ToSheets As Boolean = False, Optional Path As String) As ArrayFactory
+On Error GoTo catch
+    Dim thisCommand As Object
+    Dim rs As Object
+    
+    Dim AF As New ArrayFactory
+    
+    Set thisCommand = VBA.CreateObject("ADODB.Command")
+    
+    cn.OpenConnection.cursorLocation = 3
+    
+    thisCommand.ActiveConnection = cn.OpenConnection: thisCommand.CommandText = Sql
+    
+    Set rs = thisCommand.Execute
+    If Not ToSheets Then
+        If rs.RecordCount = 0 Then
+            AF.SetArrayField GetFieldsToArray(rs)
+            Set ExecuteSql = AF
+            Exit Function
+            
+        End If
+        AF.SetArray (rs.GetRows())
+        AF.Transpose = True
+        AF.SetArrayField GetFieldsToArray(rs)
+        Set ExecuteSql = AF
+    Else
+        If rs.RecordCount > 0 Then
+            Dim ts As New ToSheet
+            Call ts.ExportExcel(rs, Path)
+        End If
+    End If
+    Set thisCommand = Nothing
+    
+    Exit Function
+    
+catch:
+    Err.Raise 4004, "ExecuteSqlAction", Err.Description
+End Function
+Private Function GetFieldsToArray(rs As Object) As Variant
+    Dim i As Integer
+    Dim ArrayList As Variant
+    Dim qtdColumns As Integer
+    qtdColumns = rs.fields.Count - 1
+    ReDim ArrayList(qtdColumns)
+    
+    For i = 0 To qtdColumns
+        ArrayList(i) = rs.fields(i).Name
+    Next
+    GetFieldsToArray = ArrayList
+End Function
+

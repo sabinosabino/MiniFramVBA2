@@ -1,0 +1,76 @@
+VERSION 1.0 CLASS
+BEGIN
+  MultiUse = -1  'True
+END
+Attribute VB_Name = "Form_SAD_Documentacao_Modulos"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = True
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = False
+Option Compare Database
+
+Private Sub Atual_Click()
+On Error GoTo catch
+    DoCmd.RunCommand acCmdSaveRecord
+    MsgBox "Salvo com sucesso."
+    Exit Sub
+catch:
+    MsgBox Err.Description
+End Sub
+
+Private Sub cmdAtualReport_Click()
+    DoCmd.OpenReport "SAD_Report_Documentacao_Metodos", acViewPreview
+End Sub
+
+Private Sub cmdclose_Click()
+    DoCmd.Close acForm, Me.Name
+End Sub
+
+Private Sub cmdSalvar_Click()
+    Dim Comentario As String
+    If MsgBox("Deseja realmente salvar a todos comenários assim?", vbYesNo, "Atenção") = vbYes Then
+        Comentario = InputBox("Informe o comentário", "Comentário", Me.Comentario)
+        CurrentDb.Execute "Update SAD_Documentacao_Modulos Set Comentario='" & Comentario & "' Where NomeProcedimento='" & Me.NomeProcedimento & "'"
+        Me.Undo
+        DoCmd.GoToRecord , , acNewRec
+    End If
+End Sub
+
+Private Sub cmdTodosReports_Click()
+    DoCmd.GoToRecord , , acNewRec
+    DoCmd.OpenReport "SAD_Report_Documentacao_Metodos", acViewPreview
+End Sub
+
+Private Sub Comando105_Click()
+    On Error Resume Next
+    DoCmd.OutputTo acOutputQuery, "SAD_Consulta_Documentacao_Metodos", acFormatXLSX, , 1
+End Sub
+
+Private Sub consulta_Click()
+    Dim slq As String
+    Select Case Me.jacomentou
+        Case "Sim"
+            Sql = "Select * from SAD_Documentacao_Modulos Where Nome Like '" & Me.moduloclasses & "*' And NomeProcedimento Like '" & Me.procedimentos & "*' And Len([Comentario])>2"
+        Case "Não"
+            Sql = "Select * from SAD_Documentacao_Modulos Where Nome Like '" & Me.moduloclasses & "*' And NomeProcedimento Like '" & Me.procedimentos & "*' And Len([Comentario])<=2"
+        Case "Todos"
+            Sql = "Select * from SAD_Documentacao_Modulos Where NomeProcedimento='" & Me.procedimentos & "' And Len([Comentario])>=0"
+            Me.moduloclasses = ""
+        Case Else
+    End Select
+        Me.lst.RowSource = Sql
+End Sub
+
+Private Sub iniciaDocumentacao_Click()
+    SAD_Documentacao.PercorreModulosEClasses
+    AbrirFecharFormulario
+End Sub
+
+Private Sub lst_DblClick(Cancel As Integer)
+On Error Resume Next
+    DoCmd.OpenForm Me.Name, , , "Id=" & Me.lst.Column(0)
+End Sub
+
+Private Sub moduloclasses_AfterUpdate()
+    Me.procedimentos.Requery
+End Sub

@@ -1,0 +1,44 @@
+VERSION 1.0 CLASS
+BEGIN
+  MultiUse = -1  'True
+END
+Attribute VB_Name = "Form_SAD_GeraClasses"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = True
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = False
+Option Compare Database
+
+Private Sub GerarDoBanco_Click()
+    m_GerarCodigo.GerarDoBanco Me.Id
+    Me.Refresh
+End Sub
+
+Private Sub GerarObjetos_Click()
+    Call GeraObjeto(Me.Id)
+End Sub
+Public Sub GeraObjeto(NomeClasse As String, Optional msg As Boolean = True)
+Dim texto As String
+    If Forms!sad_Classes!Modelo Then
+        texto = m_GerarCodigo.GerarCodigos(NomeClasse)
+        m_CreateObject.CreateObjectClass NomeClasse, texto
+        Call m_CreateObject.AddServives(NomeClasse)
+    End If
+    If Forms!sad_Classes!Servico Then
+        texto = m_GerarCodigo.GerarCodigosServices(NomeClasse)
+        m_CreateObject.CreateObjectClass NomeClasse & "Services", texto
+    End If
+    If Forms!sad_Classes!Formularios Then
+        CriarForm Me.Id
+        texto = m_CreateObject.GetTextoParaForm(NomeClasse)
+        m_CreateObject.EscreverEmForm NomeClasse, texto
+    End If
+    If msg Then
+        MsgBox "Processo finalizado com sucesso.", , "Finalizado"
+    End If
+End Sub
+Private Sub CriarForm(NomeClasse As String)
+    Dim rs As DAO.Recordset
+    Set rs = CurrentDb.OpenRecordset("Select * from Atributos Where ClasseId='" & NomeClasse & "'")
+    m_CreateObject.CreateItensForm NomeClasse, rs
+End Sub

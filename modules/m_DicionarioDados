@@ -1,0 +1,19 @@
+Attribute VB_Name = "m_DicionarioDados"
+Option Compare Database
+Sub GerarDicionarioDados()
+    Dim dd As New DataDAO
+    Dim AF As ArrayFactory
+    Dim i As Long
+    Dim context As New Contexto
+    Set AF = dd.ExecuteSql("GetAllTableAnAllColumns", context.conn)
+    
+    Dim sqlInsert As String
+    For i = 1 To AF.Rows
+        sqlInsert = "Insert Into DicionarioDados(schema_name,table_name,column_id,column_name,data_type,max_length,precision)" _
+        & "values('" & AF.GetItem(i, "schema_name") & "','" & AF.GetItem(i, "table_name") & "'," & AF.GetItem(i, "column_id") & ",'" _
+        & AF.GetItem(i, "column_name") & "','" & AF.GetItem(i, "data_type") & "'," & AF.GetItem(i, "max_length") & "," & AF.GetItem(i, "precision") & ")"
+        CurrentDb.Execute sqlInsert
+    Next
+End Sub
+
+

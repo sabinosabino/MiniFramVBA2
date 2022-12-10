@@ -1,0 +1,53 @@
+Attribute VB_Name = "SAD_Documentacao"
+Option Compare Database
+
+Public Sub PercorreModulosEClasses()
+    Dim v As VBIDE.VBE
+    Dim m As VBIDE.CodeModule
+    Dim Cs As VBIDE.VBComponents
+    Dim c As VBIDE.VBComponent
+    Set v = Application.VBE
+    
+    Set Cs = v.ActiveVBProject.VBComponents
+    RedefinirAtivos
+    For Each c In Cs
+        If c.Type = vbext_ct_StdModule Or c.Type = vbext_ct_ClassModule Then
+            SeparaProcedimentosCriaObjetoDocumentacao c
+        End If
+    Next
+    AtualizarMetodosCrud
+    ExcluiInativos
+End Sub
+Private Sub RedefinirAtivos()
+    CurrentDb.Execute "Update SAD_Documentacao_Modulos Set Ativo=0"
+End Sub
+Private Sub SeparaProcedimentosCriaObjetoDocumentacao(Componente As VBIDE.VBComponent)
+    Dim Linhas As Integer
+    Dim i As Integer
+    Linhas = Componente.CodeModule.CountOfLines
+    Dim linhaTexto As String
+    Dim oD As SAD_Object_Documentacao
+    For i = 1 To Linhas
+        linhaTexto = Componente.CodeModule.Lines(i, 1)
+        
+        If InStr(1, linhaTexto, " Function ") > 0 Or InStr(1, linhaTexto, " Sub ") > 0 Then
+            Set oD = New SAD_Object_Documentacao
+            oD.SetObjectDocumentacao linhaTexto, Componente.Name, Componente.Type
+        End If
+    Next
+End Sub
+Private Sub AtualizarMetodosCrud()
+    CurrentDb.Execute "Update SAD_Documentacao_Modulos set Comentario = '/Salva um objeto do tipo no BANCO DE DADOS referenciado no parametro/' Where Len([Comentario])<=2 And NomeProcedimento='Add'"
+    CurrentDb.Execute "Update SAD_Documentacao_Modulos set Comentario = '/Adiciona Multiplos objetos de uma coleção eque contenha o mesmo tipo em uma única vez no BANCO DE DADOS/' Where Len([Comentario])<=2 And NomeProcedimento='AddMultipleRows'"
+    CurrentDb.Execute "Update SAD_Documentacao_Modulos set Comentario = '/Adiciona Multiplos objetos de uma coleção eque contenha o mesmo tipo em uma única vez no BANCO DE DADOS/' Where Len([Comentario])<=2 And NomeProcedimento='AddMultipleRows'"
+    CurrentDb.Execute "Update SAD_Documentacao_Modulos set Comentario = '/Realiza alteração no BANCO DE DADOS do objeto passado no parametro do método/' Where Len([Comentario])<=2 And NomeProcedimento='Update'"
+    CurrentDb.Execute "Update SAD_Documentacao_Modulos set Comentario = '/Exclui um objeto no BANCO DE DADOS - Passando o Id a classe de serviço terá responsabilidade de trabalhar com a classe daquele serviço/' Where Len([Comentario])<=2 And NomeProcedimento='delete'"
+    CurrentDb.Execute "Update SAD_Documentacao_Modulos set Comentario = '/Retorna do BANDO DE DADOS uma coleção de objetos do contexto atual/' Where Len([Comentario])<=2 And NomeProcedimento='SelectModelByCollection'"
+    CurrentDb.Execute "Update SAD_Documentacao_Modulos set Comentario = 'Converte dos dados de um ArrayFactory em Objeto do contexto' Where Len([Comentario])<=2 And NomeProcedimento='ListedModel'"
+    CurrentDb.Execute "Update SAD_Documentacao_Modulos set Comentario = '/Carregar um modelo de referente a classe de serviços, passe o parâmetro e ele buscará no BANCO DE DADOS/' Where Len([Comentario])<=2 And NomeProcedimento='Model'"
+End Sub
+
+Private Sub ExcluiInativos()
+    CurrentDb.Execute "Delete * From SAD_Documentacao_Modulos Where Ativo='Não'"
+End Sub
+

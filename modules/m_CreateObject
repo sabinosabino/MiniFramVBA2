@@ -1,0 +1,126 @@
+Attribute VB_Name = "m_CreateObject"
+Option Compare Database
+Public Sub CreateObjectClass(NameClass As String, text As String)
+    Dim Vbcoms As Object
+    Set Vbcoms = Application.VBE.ActiveVBProject.VBComponents
+    
+    Vbcoms.Add 2
+    
+    Dim Vbcom As Object
+    
+    Set Vbcom = Vbcoms.Item("Classe1")
+    
+    Vbcom.Name = NameClass
+    
+    Vbcom.CodeModule.AddFromString (text)
+    
+End Sub
+Public Function Existe(NameClass As String) As Boolean
+On Error GoTo 1
+    Dim Vbcoms As Object
+    Set Vbcoms = Application.VBE.ActiveVBProject.VBComponents
+    Dim Vbcom As Object
+    Set Vbcom = Vbcoms.Item(NameClass)
+    Existe = True
+    Exit Function
+1:
+    Existe = False
+End Function
+Public Sub CreateObjectModele(NameModule As String, text As String)
+    Dim Vbcoms As Object
+    Set Vbcoms = Application.VBE.ActiveVBProject.VBComponents
+    
+    Vbcoms.Add 1
+    
+    Dim Vbcom As Object
+    
+    Set Vbcom = Vbcoms.Item("Módulo1")
+    
+    Vbcom.Name = NameModule
+    
+    Vbcom.CodeModule.AddFromString (text)
+    
+End Sub
+Public Sub CreateItensForm(FormName As String, Optional rs As DAO.Recordset)
+    Dim frm As Form
+    Dim left As Integer
+    Dim TOP As Integer
+    Dim right As Integer
+    Dim button As Integer
+    
+    left = 200
+    TOP = 200
+    mWidth = 6000
+    mHeight = 310
+    
+    DoCmd.CopyObject , FormName, acForm, DLookup("NomeFormModelo", "Connection")
+    DoCmd.OpenForm FormName, acDesign
+    Set frm = Forms(FormName)
+    Dim lb As label
+    Dim txt As TextBox
+    Dim i As Integer
+    Do While Not rs.EOF
+        
+        Set lb = CreateControl(FormName, acLabel, acDetail, , , left, TOP, mWidth, mHeight)
+        TOP = TOP + mHeight + 3
+        
+        Set txt = CreateControl(FormName, acTextBox, acDetail, , , left, TOP, mWidth, mHeight)
+        TOP = TOP + mHeight + 5
+        left = 200
+        
+        lb.Name = "lb" & rs("Nome")
+        lb.Caption = UCase(rs("Nome"))
+        txt.Name = "txt" & rs("Nome")
+        rs.MoveNext
+    Loop
+    DoCmd.Close acForm, FormName, acSaveYes
+End Sub
+Public Function GetTextoParaForm(NomeClass As String)
+    Dim texto As String
+    texto = DLookup("modelo", "modelos", "Id='Formularios'")
+    texto = m_GerarCodigo.AtribuicaoForm(NomeClass, texto)
+    texto = m_GerarCodigo.GetCarregarDadosForm(NomeClass, texto)
+    texto = Replace(texto, "@Class", NomeClass)
+    GetTextoParaForm = texto
+End Function
+Public Sub EscreverEmForm(NameForm As String, text As String)
+    Dim Vbcoms As Object
+    Set Vbcoms = Application.VBE.ActiveVBProject.VBComponents
+    
+    Dim Vbcom As Object
+    
+    Set Vbcom = Vbcoms.Item("Form_" & NameForm)
+    
+    
+    Vbcom.CodeModule.AddFromString (text)
+End Sub
+
+Sub Teste()
+    Dim Vbcoms As Object
+    Set Vbcoms = Application.VBE.ActiveVBProject.VBComponents
+    Dim c As Integer
+    c = Vbcoms.Count
+    
+    For i = 0 To c
+        Debug.Print Vbcoms(i).Name
+    Next
+End Sub
+
+Public Sub AddServives(nameClasse As String)
+Dim textotemp As String
+textotemp = "Public Property Get @@Classe() As @@ClasseServices: Set @@Classe = New @@ClasseServices: Call @@Classe.SetConn(conn): End Property" & vbNewLine & "'@@Reservado"
+textotemp = Replace(textotemp, "@@Classe", nameClasse)
+    Dim Vbcoms As VBIDE.VBComponents
+    Set Vbcoms = Application.VBE.ActiveVBProject.VBComponents
+    
+    Dim texto As String
+    Dim obj As VBIDE.VBComponent
+    For Each obj In Vbcoms
+        If obj.Name = "Contexto" Then
+            texto = obj.CodeModule.Lines(1, obj.CodeModule.CountOfLines)
+            texto = Replace(texto, "'@@Reservado", textotemp)
+            Call obj.CodeModule.DeleteLines(1, obj.CodeModule.CountOfLines)
+            Call obj.CodeModule.AddFromString(texto)
+        End If
+    Next
+End Sub

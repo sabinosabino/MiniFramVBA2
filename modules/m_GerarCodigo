@@ -1,0 +1,214 @@
+Attribute VB_Name = "m_GerarCodigo"
+Option Compare Database
+Public Sub GerarDoBanco(Nome As String)
+On Error GoTo catch
+    Dim rs As Object
+    Dim field As Object
+    Dim dd As New DataDAO
+    Dim thisCommand As Object
+    Dim cn As New Connect
+    Dim TOP, Limite As String
+    Dim Sql As String
+    Set thisCommand = VBA.CreateObject("ADODB.Command")
+    cn.OpenConnection.cursorLocation = 3
+    
+    'TODO: Refatorar
+    'Verificando tipo de provedor atual
+    If GetTipeProvider = 1 Then
+        TOP = " TOP 1 "
+    ElseIf GetTipeProvider = 2 Then
+        Limite = " LIMIT 1"
+    End If
+    
+    Sql = "Select " & TOP & " * From " & Nome & Limite
+    thisCommand.ActiveConnection = cn.OpenConnection: thisCommand.CommandText = Sql
+    Set rs = thisCommand.Execute
+    Dim x As Integer: x = rs.fields.Count
+    DoCmd.RunCommand acCmdSaveRecord
+    CurrentDb.Execute "Delete * From Atributos Where ClasseId='" & Nome & "'"
+    For i = 0 To x - 1
+        InsertFields rs.fields(i).Name, Nome, rs.fields(i).Type
+    Next
+    Exit Sub
+catch:
+    MsgBox Err.Description, , "Atenção Erro"
+End Sub
+
+Private Sub InsertFields(NomeCampo As String, Nome As String, Optional codType As Integer)
+On Error GoTo catch
+    Dim tipo As String
+    tipo = Nz(DLookup("TipoVBA", "DataTypeConverter", "Codigo=" & codType), 404) & ""
+    If tipo = "404" Then
+        MsgBox "Campo: " & NomeCampo & " Tabela: " & Nome & " Problema Tipo de Dados"
+    End If
+    CurrentDb.Execute "Insert Into Atributos(Nome, ClasseId, TipoDado) Values('" & NomeCampo & "', '" & Nome & "','" & tipo & "')"
+    Exit Sub
+catch:
+    MsgBox Err.Description, , "Atenção"
+End Sub
+Public Function GerarCodigos(Classe As String) As String
+Dim rs As DAO.Recordset
+Dim texto As String
+texto = DLookup("modelo", "modelos", "Id='ClassesVBA'")
+Set rs = CurrentDb.OpenRecordset("Select * from cstAtributos Where ClasseId='" & Classe & "'")
+        texto = atributosPrivados(Classe, rs, texto)
+        texto = Atributos(Classe, rs, texto)
+        texto = Atribuicao(Classe, rs, texto)
+        texto = Replace(texto, "@Class", Classe)
+        texto = Replace(texto, "@informacoes", informacoes)
+GerarCodigos = texto
+Set rs = Nothing
+End Function
+Private Function informacoes() As String
+    informacoes = "'Feito em: " & Now & vbNewLine _
+                    & "'Feito por: Welbert Sabino" & vbNewLine _
+                    & "'sabinowelbert@gmail.com" & vbNewLine _
+                    & "'(31) 99752-4220" & vbNewLine _
+                    & "'-------------------------------------------------------------"
+End Function
+Public Function GerarCodigosServices(Classe As String) As String
+Dim rs As DAO.Recordset
+Dim texto As String
+texto = DLookup("modelo", "modelos", "Id='Servicos'")
+Set rs = CurrentDb.OpenRecordset("Select * from cstAtributos Where ClasseId='" & Classe & "'")
+        texto = Atribuicao(Classe, rs, texto)
+        texto = Replace(texto, "@Class", Classe)
+        texto = Replace(texto, "@informacoes", informacoes)
+GerarCodigosServices = texto
+Set rs = Nothing
+End Function
+Public Function GerarCarregarDados(Classe As String) As String
+Dim rs As DAO.Recordset
+Dim texto As String
+texto = ""
+Set rs = CurrentDb.OpenRecordset("Select * from cstAtributos Where ClasseId='" & Classe & "'")
+
+        texto = AtribuirCarregarDados(Classe, rs, texto)
+        
+GerarCarregarDados = texto
+Set rs = Nothing
+End Function
+Private Function atributosPrivados(Classe As String, rs As DAO.Recordset, texto As String) As String
+Dim stringTexto As String
+
+Do While Not rs.EOF
+    stringTexto = stringTexto & vbNewLine & rs("Codigos")
+    rs.MoveNext
+Loop
+
+atributosPrivados = Replace(texto, "@atributoPrivado", stringTexto)
+End Function
+Private Function AtribuirCarregarDados(Classe As String, rs As DAO.Recordset, texto As String) As String
+Dim stringTexto As String
+
+Do While Not rs.EOF
+    stringTexto = stringTexto & vbNewLine & rs("CarregarDados")
+    rs.MoveNext
+Loop
+
+AtribuirCarregarDados = stringTexto
+End Function
+Public Function AtribuicaoForm(Classe As String, texto As String) As String
+Dim stringTexto As String
+Dim rs As DAO.Recordset
+Set rs = CurrentDb.OpenRecordset("Select * from cstAtributos Where ClasseId='" & Classe & "'")
+Do While Not rs.EOF
+    stringTexto = stringTexto & vbNewLine & vbTab & vbTab & rs("Atribuicao")
+    rs.MoveNext
+Loop
+texto = Replace(texto, "@Atribuicao", stringTexto)
+AtribuicaoForm = texto
+End Function
+Public Function GetCarregarDadosForm(Classe As String, texto As String) As String
+Dim stringTexto As String
+Dim rs As DAO.Recordset
+Set rs = CurrentDb.OpenRecordset("Select * from cstAtributos Where ClasseId='" & Classe & "'")
+Do While Not rs.EOF
+    stringTexto = stringTexto & vbNewLine & vbTab & vbTab & rs("CarregarDados")
+    rs.MoveNext
+Loop
+texto = Replace(texto, "@CarregarDados", stringTexto)
+GetCarregarDadosForm = texto
+End Function
+Private Function Atributos(Classe As String, rs As DAO.Recordset, texto As String) As String
+Dim stringTexto As String
+Dim tempAtributo As String
+rs.MoveFirst
+Do While Not rs.EOF
+        If rs.fields("Nome") = "Id" Then
+            rs.MoveNext
+        End If
+        tempAtributo = DLookup("modelo", "Modelos", "id='atributos'")
+        tempAtributo = Replace(tempAtributo, "@nome", rs.fields("Nome"))
+        tempAtributo = Replace(tempAtributo, "@Tipo", rs.fields("TipoDado"))
+        stringTexto = stringTexto & vbNewLine & tempAtributo
+        rs.MoveNext
+Loop
+Atributos = Replace(texto, "@Atributos", stringTexto)
+End Function
+Private Function Atribuicao(Classe As String, rs As DAO.Recordset, texto As String) As String
+Dim stringTexto As String
+rs.MoveFirst
+Do While Not rs.EOF
+    stringTexto = stringTexto & vbNewLine & Chr(9) & rs("List")
+    rs.MoveNext
+Loop
+
+Atribuicao = Replace(texto, "@Atribuicao", stringTexto)
+End Function
+Private Function CarregarDados(Classe As String, rs As DAO.Recordset) As String
+Dim stringTexto As String
+
+Do While Not rs.EOF
+    stringTexto = stringTexto & vbNewLine & Chr(9) & rs("CarregarDados")
+    rs.MoveNext
+Loop
+
+CarregarDados = Replace(chaves, "@conteudo", stringTexto)
+End Function
+Private Function list(Classe As String, rs As DAO.Recordset) As String
+Dim stringTexto As String
+Dim Modelo As String
+Do While Not rs.EOF
+    stringTexto = stringTexto & vbNewLine & Chr(9) & rs("List")
+    rs.MoveNext
+Loop
+
+
+Modelo = DLookup("modelo", "modelos", "id='list'")
+Modelo = Replace(Replace(Modelo, "@classe", Classe), "@campos", stringTexto)
+list = Modelo
+End Function
+Private Function One(Classe As String, rs As DAO.Recordset) As String
+Dim stringTexto As String
+Dim Modelo As String
+Do While Not rs.EOF
+    stringTexto = stringTexto & vbNewLine & Chr(9) & rs("List")
+    rs.MoveNext
+Loop
+Modelo = DLookup("modelo", "modelos", "id='One'")
+Modelo = Replace(Replace(Modelo, "@classe", Classe), "@campos", stringTexto)
+One = Modelo
+End Function
+Private Function Save(Classe As String) As String
+Dim stringTexto As String
+Dim Modelo As String
+Modelo = DLookup("modelo", "modelos", "id='Save'")
+Modelo = Replace(Modelo, "@classe", Classe)
+Save = Modelo
+End Function
+Private Function Delete(Classe As String) As String
+Dim stringTexto As String
+Dim Modelo As String
+Modelo = DLookup("modelo", "modelos", "id='Delete'")
+Modelo = Replace(Modelo, "@classe", Classe)
+Delete = Modelo
+End Function
+
+Public Function PrimeiraMaiscula(texto As String) As String
+    PrimeiraMaiscula = StrConv(texto, vbProperCase)
+End Function
+
+
+
+

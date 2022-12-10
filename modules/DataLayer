@@ -1,0 +1,246 @@
+VERSION 1.0 CLASS
+BEGIN
+  MultiUse = -1  'True
+END
+Attribute VB_Name = "DataLayer"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = False
+Attribute VB_Exposed = False
+Public Sub Add(parameter As ParameterSql, cn As Connect)
+On Error GoTo catch
+    Dim Sql As String
+    Dim dataobject As New DataDAO
+    
+    Sql = GetSqlInsert(parameter)
+    dataobject.ExecuteSqlAction Sql, cn
+    
+    Set dataobject = Nothing
+    Exit Sub
+catch:
+    Set dataobject = Nothing
+    Err.Raise Err.Number, "Add-DataLayer", Err.Description
+End Sub
+Public Sub AddMultipleRows(CollectionModel As Collection, cn As Connect)
+On Error GoTo catch
+    Dim Sql As String
+    Dim dataobject As New DataDAO
+    
+    Sql = GetSqlInsertMultipleRows(CollectionModel)
+    
+    dataobject.ExecuteSqlAction Sql, cn
+    
+    Set dataobject = Nothing
+    Exit Sub
+catch:
+    Set dataobject = Nothing
+    Err.Raise Err.Number, "AddMultipleRows-DataLayer", Err.Description
+End Sub
+Public Sub Update(parameter As ParameterSql, Condition As String, cn As Connect)
+On Error GoTo catch
+    Dim Sql As String
+    Dim dataobject As New DataDAO
+    
+    Sql = GetSqlUpdate(parameter, Condition)
+    dataobject.ExecuteSqlAction Sql, cn
+    
+    Set dataobject = Nothing
+    Exit Sub
+catch:
+    Set dataobject = Nothing
+    Err.Raise Err.Number, "Update-DataLayer", Err.Description
+End Sub
+Public Function SelectModel(parameter As ParameterSql, cn As Connect, Optional Condition As String) As ArrayFactory
+On Error GoTo catch
+    Dim Sql As String
+    Dim dataobject As DataDAO
+    Dim Limite As String
+    Dim TOP As String
+    Set dataobject = New DataDAO
+    
+    'Verificando tipo de provedor atual
+    If GetTipeProvider = 1 Then
+        TOP = " TOP (1000)"
+    ElseIf GetTipeProvider = 2 Then
+        Limite = " LIMIT 1000"
+    Else
+    'outros
+    End If
+        
+    Sql = "Select" & TOP & " * From " & parameter.NameTable & " " & Condition & Limite
+    Set SelectModel = dataobject.ExecuteSql(Sql, cn)
+    Set dataobject = Nothing
+    Exit Function
+catch:
+    Set dataobject = Nothing
+    Err.Raise Err.Number, "Delete-DataLayer", Err.Description
+End Function
+Public Sub Delete(parameter As ParameterSql, Condition As String, cn As Connect)
+On Error GoTo catch
+    Dim Sql As String
+    Dim dataobject As New DataDAO
+    
+    Sql = "Delete From " & parameter.NameTable & " Where " & Condition
+    dataobject.ExecuteSqlAction Sql, cn
+    
+    Set dataobject = Nothing
+    Exit Sub
+catch:
+    Set dataobject = Nothing
+    Err.Raise Err.Number, "Delete-DataLayer", Err.Description
+End Sub
+Private Function GetSqlInsert(parameter As ParameterSql)
+On Error GoTo catch
+    Dim fields As String
+    Dim values As String
+    Dim sqlTemp As String: sqlTemp = "Insert Into " & parameter.NameTable & "(@ValuesFields) Values(@ValuesInsert)"
+    
+    fields = GetFields(parameter.CollectionFields)
+    values = GetVelues(parameter.CollectionValues)
+    
+    GetSqlInsert = Replace(Replace(sqlTemp, "@ValuesFields", fields), "@ValuesInsert", values)
+    Exit Function
+catch:
+    Err.Raise Err.Number, "GetSqlInsert-DataLayer", Err.Description
+End Function
+Private Function GetSqlInsertMultipleRows(CollectionModel As Collection)
+On Error GoTo catch
+    Dim fields As String
+    Dim values As String
+    Dim sqlTemp As String: sqlTemp = "Insert Into " & CollectionModel.Item(1).parameter.NameTable & "(@ValuesFields) Values(@ValuesInsert)"
+    
+    'Get on Fields in One Model
+    fields = GetFields(CollectionModel.Item(1).parameter.CollectionFields)
+    
+    values = GetVeluesMultiplesRows(CollectionModel)
+    
+    GetSqlInsertMultipleRows = Replace(Replace(sqlTemp, "@ValuesFields", fields), "(@ValuesInsert)", values)
+    Exit Function
+catch:
+    Err.Raise Err.Number, "GetSqlInsert-DataLayer", Err.Description
+End Function
+Private Function GetFields(CollectionFields As Collection)
+On Error GoTo catch
+    Dim indexCollection As Integer
+    Dim stringBuilder As String
+    
+    For indexCollection = 1 To CollectionFields.Count
+        stringBuilder = stringBuilder & "," & CollectionFields.Item(indexCollection)
+    Next
+    
+    GetFields = Mid(stringBuilder, 2, Len(stringBuilder))
+    Exit Function
+catch:
+    Err.Raise Err.Number, "GetFields-DataLayer", Err.Description
+End Function
+
+Private Function GetVelues(CollectionValues As Collection)
+On Error GoTo catch
+    Dim indexCollection As Integer
+    Dim stringBuilder As String
+    
+    For indexCollection = 1 To CollectionValues.Count
+        stringBuilder = stringBuilder & "," & selectValueFormatedType(CollectionValues.Item(indexCollection))
+    Next
+    
+    GetVelues = Mid(stringBuilder, 2, Len(stringBuilder))
+    Exit Function
+catch:
+    Err.Raise Err.Number, "GetVelues-DataLayer", Err.Description
+End Function
+Private Function GetVeluesMultiplesRows(CollectionModels As Collection)
+
+'Funcão recebe uma coleção de modelos qualquer podendo ser 1 ou vários modelos e
+'criar a parte do values do insert ('maria', 1, 'betim')
+'uma colectionvalues recebe objetos que tem coleções de campos dentro dele
+'para entender melhor veja o metodo dessa classe getvalues
+'-------------------------------------------------------------------------------------
+On Error GoTo catch
+    Dim indexCollectionModel As Integer
+    Dim collectionTemp As Collection
+    Dim stringBuilder As String
+    Dim stringFim As String
+    Dim indexCollection As Integer
+    
+    For indexCollection = 1 To CollectionModels.Count
+        Set collectionTemp = CollectionModels.Item(indexCollection).parameter.CollectionValues
+        stringBuilder = GetVelues(collectionTemp)
+        stringFim = stringFim & ", " & "(" & stringBuilder & ")"
+        stringBuilder = ""
+    Next indexCollection
+    
+    GetVeluesMultiplesRows = "(" & Mid(stringFim, 4, Len(stringFim))
+    Exit Function
+catch:
+    Err.Raise Err.Number, "GetVelues-DataLayer", Err.Description
+End Function
+
+Private Function GetSqlUpdate(parameter As ParameterSql, Condition As String)
+On Error GoTo catch
+    Dim fieldsAndAalues As String
+    Dim sqlTemp As String: sqlTemp = "Update " & parameter.NameTable & " Set @ValuesFields Where @Conditions"
+    fieldsAndAalues = GetFieldsAndValues(parameter)
+    
+    GetSqlUpdate = Replace(Replace(sqlTemp, "@ValuesFields", fieldsAndAalues), "@Conditions", Condition)
+    Exit Function
+catch:
+    Err.Raise Err.Number, "GetSqlUpdate-DataLayer", Err.Description
+End Function
+Private Function GetFieldsAndValues(parameter As ParameterSql)
+On Error GoTo catch
+    Dim indexCollection As Integer
+    Dim stringBuilder As String
+    
+    For indexCollection = 1 To parameter.CollectionFields.Count
+        stringBuilder = stringBuilder & "," & parameter.CollectionFields.Item(indexCollection) & "=" & selectValueFormatedType(parameter.CollectionValues.Item(indexCollection))
+    Next
+    
+    GetFieldsAndValues = Mid(stringBuilder, 2, Len(stringBuilder))
+    Exit Function
+catch:
+    Err.Raise Err.Number, "GetFieldsAndValues-DataLayer", Err.Description
+End Function
+'by @Rafael Rabaquim 31-03-2022
+Public Static Function selectValueFormatedType(ByVal elemento) As String
+    Select Case VBA.VarType(elemento)
+        Case VbVarType.vbLong
+            selectValueFormatedType = elemento
+        Case VbVarType.vbInteger
+            selectValueFormatedType = elemento
+        Case VbVarType.vbDouble
+            selectValueFormatedType = VBA.Replace(elemento, ",", ".")
+        Case VbVarType.vbBoolean
+            If elemento = falso Then
+                selectValueFormatedType = 0
+            Else
+                selectValueFormatedType = 1
+            End If
+        Case VbVarType.vbDecimal
+            selectValueFormatedType = VBA.Replace(elemento, ",", ".")
+        Case VbVarType.vbDate
+
+            'tipos de provedores tem formato de datas diferentes
+            If GetTipeProvider = 1 Then
+                'sql server
+                selectValueFormatedType = "CAST(" & VBA.Chr(39) & Format(elemento, "yyyymmdd hh:mm:ss") & VBA.Chr(39) & " AS DATETIME)"
+            ElseIf GetTipeProvider = 2 Then
+                'mysql
+                selectValueFormatedType = VBA.Chr(39) & Format(elemento, "yyyy-mm-dd hh:mm:ss") & VBA.Chr(39)
+            End If
+    
+        Case VbVarType.vbNull
+            selectValueFormatedType = "null"
+        Case VbVarType.vbEmpty
+            selectValueFormatedType = "null"
+        Case Else
+            If Not elemento = "" Then
+                selectValueFormatedType = VBA.Chr(39) & VBA.Replace(elemento, "'", "") & VBA.Chr(39)
+            ElseIf IsNull(elemento) = 0 Then
+                selectValueFormatedType = VBA.Chr(39) & VBA.Replace(elemento, "'", "") & VBA.Chr(39)
+            Else
+                selectValueFormatedType = "null"
+            End If
+        End Select
+End Function
+
+

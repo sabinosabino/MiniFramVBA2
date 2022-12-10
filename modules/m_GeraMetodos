@@ -1,0 +1,144 @@
+Attribute VB_Name = "m_GeraMetodos"
+Option Compare Database
+Option Explicit
+Public Function atributosPrivados(NomeCampo As String, tipoDados As String, Optional textoReplace = "", Optional Objeto As Boolean = False) As String
+Dim privados As String
+Dim textogetInstace As String
+textogetInstace = "     p" + NomeCampo + "=m_Util.NullForData(AF.GetItem(row,""" + NomeCampo + """))" + vbNewLine + "'@@ReservadoGetInstace"
+If Not Objeto Then
+    If textoReplace = "" Then
+        textoReplace = getModeloAtriburosPrivados()
+        atributosPrivados = Replace(Replace(textoReplace, "'@@atributosprivados", "private p" + NomeCampo + " As " + tipoDados + vbNewLine + "'@@atributosprivados", 1), "'@@ReservadoGetInstace", textogetInstace)
+    Else
+        
+        atributosPrivados = Replace(Replace(textoReplace, "'@@atributosprivados", "private p" + NomeCampo + " As " + tipoDados + vbNewLine + "'@@atributosprivados", 1), "'@@ReservadoGetInstace", textogetInstace)
+    End If
+Else
+    If textoReplace = "" Then
+        textoReplace = getModeloAtriburosPrivados()
+        atributosPrivados = Replace(Replace(textoReplace, "'@@atributosprivados", "Public " + NomeCampo + " As " + tipoDados + vbNewLine + "'@@atributosprivados", 1), "'@@ReservadoGetInstace", textogetInstace)
+    Else
+        atributosPrivados = Replace(Replace(textoReplace, "'@@atributosprivados", "Public " + NomeCampo + " As " + tipoDados + vbNewLine + "'@@atributosprivados", 1), "'@@ReservadoGetInstace", textogetInstace)
+    End If
+End If
+End Function
+Public Function getModeloAtriburosPrivados() As String
+Dim privados As String
+privados = "Option Explicit" + vbNewLine + vbNewLine
+privados = privados + "'@@atributosprivados" + vbNewLine
+privados = privados + "Private fields As Collection" + vbNewLine
+privados = privados + "Private valuefields As Collection" + vbNewLine
+privados = privados + "Public parameter As ParameterSql" + vbNewLine
+
+privados = privados + "Private Sub Class_Initialize()" + vbNewLine
+privados = privados + "     Set parameter = New ParameterSql: parameter.NameTable = ""@@Classe""" + vbNewLine
+privados = privados + "     '@@ReservadoInicilize" + vbNewLine
+privados = privados + "End Sub" + vbNewLine
+
+privados = privados + "'@@ReservadoLetGet" + vbNewLine
+
+privados = privados + "Private Sub Class_Terminate()" + vbNewLine
+privados = privados + "    Set fields = Nothing" + vbNewLine
+privados = privados + "    Set valuefields = Nothing" + vbNewLine
+privados = privados + "    Set parameter = Nothing" + vbNewLine
+privados = privados + "    '@@ReservadoTerminate" + vbNewLine
+privados = privados + "End Sub" + vbNewLine
+
+privados = privados + "public function getInstace(AF as ArrayFactory, row as Long) as @@Classe" + vbNewLine
+privados = privados + "     '@@ReservadoGetInstace" + vbNewLine
+privados = privados + "     set getInstace=Me" + vbNewLine
+privados = privados + "End Function" + vbNewLine
+
+getModeloAtriburosPrivados = privados
+End Function
+
+Public Function getLetSet(NomeCampo As String, TipoDado As String, sTexto As String, Optional Objeto As Boolean = False, Optional AutoIncremento As Boolean = False)
+    Dim texto As String
+    If Objeto Then
+        texto = texto + "       set p" + NomeCampo + " = new " + TipoDado + vbNewLine
+        texto = texto + "       '@@ReservadoInicilize" + vbNewLine
+        If sTexto = "" Then
+            getLetSet = texto
+        Else
+            getLetSet = Replace(sTexto, "'@@ReservadoInicilize", texto, 1)
+        End If
+        
+        Exit Function
+    End If
+    If AutoIncremento Then
+        texto = "Public Property Let " + NomeCampo + "(ByVal value As " + TipoDado + ")" + vbNewLine
+        texto = texto + "       p" + NomeCampo + " = value " + vbNewLine
+        texto = texto + "End Property" + vbNewLine
+        texto = texto + "Public Property Get " + NomeCampo + "() as " + TipoDado + vbNewLine
+        texto = texto + "       " + NomeCampo + " = p" + NomeCampo + vbNewLine
+        texto = texto + "End Property" + vbNewLine
+        texto = texto + "'@@ReservadoLetGet" + vbNewLine
+        getLetSet = Replace(sTexto, "'@@ReservadoLetGet", texto, 1)
+        Exit Function
+    End If
+    texto = "Public Property Let " + NomeCampo + "(ByVal value As " + TipoDado + ")" + vbNewLine
+    texto = texto + "       p" + NomeCampo + " = value: parameter.CollectionFields.Add (""" + NomeCampo + """): parameter.CollectionValues.Add (p" + NomeCampo + ")" + vbNewLine
+    texto = texto + "End Property" + vbNewLine
+    texto = texto + "Public Property Get " + NomeCampo + "() as " + TipoDado + vbNewLine
+    texto = texto + "       " + NomeCampo + " = p" + NomeCampo + vbNewLine
+    texto = texto + "End Property" + vbNewLine
+    texto = texto + "'@@ReservadoLetGet"
+    If sTexto <> "" Then
+        getLetSet = Replace(sTexto, "'@@ReservadoLetGet", texto, 1)
+    Else
+        getLetSet = texto
+    End If
+End Function
+
+Public Sub AtualizarCampo(classenome As String, NomeCampo As String, TipoDado As String, Optional Objeto As Boolean = False)
+Dim textotemp As String
+Dim texto As String
+Dim Vbcoms As VBIDE.VBComponents
+Set Vbcoms = Application.VBE.ActiveVBProject.VBComponents
+Dim obj As VBIDE.VBComponent
+        If Not Objeto Then
+            textotemp = "private p" & NomeCampo & " As " & TipoDado + vbNewLine + "'@@atributosprivados"
+        Else
+            textotemp = "public p" & NomeCampo & " As " & TipoDado + vbNewLine + "'@@atributosprivados"
+        End If
+        
+        For Each obj In Vbcoms
+            If obj.Name = classenome Then
+                texto = obj.CodeModule.Lines(1, obj.CodeModule.CountOfLines)
+                texto = Replace(texto, "'@@atributosprivados", textotemp)
+                Call obj.CodeModule.DeleteLines(1, obj.CodeModule.CountOfLines)
+                Call obj.CodeModule.AddFromString(texto)
+            End If
+        Next
+        
+        For Each obj In Vbcoms
+            If obj.Name = classenome Then
+                texto = obj.CodeModule.Lines(1, obj.CodeModule.CountOfLines)
+                texto = Replace(texto, "'@@ReservadoGetInstace", "p" + NomeCampo + "= m_Util.NullForData(AF.GetItem(row, """ + NomeCampo + """))" + vbNewLine + "'@@ReservadoGetInstace")
+                Call obj.CodeModule.DeleteLines(1, obj.CodeModule.CountOfLines)
+                Call obj.CodeModule.AddFromString(texto)
+            End If
+        Next
+If Not Objeto Then
+        textotemp = m_GeraMetodos.getLetSet(NomeCampo, TipoDado, "", Objeto, False)
+        For Each obj In Vbcoms
+            If obj.Name = classenome Then
+                texto = obj.CodeModule.Lines(1, obj.CodeModule.CountOfLines)
+                texto = Replace(texto, "'@@ReservadoLetGet", textotemp)
+                Call obj.CodeModule.DeleteLines(1, obj.CodeModule.CountOfLines)
+                Call obj.CodeModule.AddFromString(texto)
+            End If
+        Next
+    Else
+            textotemp = m_GeraMetodos.getLetSet(NomeCampo, TipoDado, "", Objeto, False)
+            For Each obj In Vbcoms
+            If obj.Name = classenome Then
+                texto = obj.CodeModule.Lines(1, obj.CodeModule.CountOfLines)
+                texto = Replace(texto, "'@@ReservadoInicilize", textotemp)
+                texto = Replace(texto, "'@@ReservadoTerminate", "set p" & NomeCampo + "=nothing" + vbNewLine + "'@@ReservadoTerminate")
+                Call obj.CodeModule.DeleteLines(1, obj.CodeModule.CountOfLines)
+                Call obj.CodeModule.AddFromString(texto)
+            End If
+        Next
+    End If
+End Sub

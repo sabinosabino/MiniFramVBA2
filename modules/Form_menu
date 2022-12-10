@@ -1,0 +1,112 @@
+VERSION 1.0 CLASS
+BEGIN
+  MultiUse = -1  'True
+END
+Attribute VB_Name = "Form_menu"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = True
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = False
+Option Compare Database
+
+Private Sub Comando35_Click()
+    m_GerarCodigo.GerarDoBanco Me.Id
+    Me.SubAtributos.Requery
+End Sub
+
+Private Sub Comando41_Click()
+Capiturar_Click
+End Sub
+
+Private Sub Capiturar_Click()
+    Dim Sql As String
+    Dim AF As ArrayFactory
+    Dim dd As New DataDAO
+    Dim cn As New Connect
+    Dim i As Long
+    'Todo: Verificar para mysql
+    If GetTipeProvider = 1 Then
+        Sql = "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE' And Not TABLE_NAME like 'sys%' Order BY TABLE_NAME;"
+        Set AF = dd.ExecuteSql(Sql, cn)
+    
+        For i = 1 To AF.Rows
+            CurrentDb.Execute "Insert Into Classe(Id, Projeto) Values('" & AF.GetItemXY(i, 3) & "','" & AF.GetItemXY(i, 1) & "')"
+            m_GerarCodigo.GerarDoBanco AF.GetItemXY(i, 3)
+        Next
+    Else
+        Sql = "SELECT table_name FROM information_schema.tables WHERE table_schema = '" & DLookup("DataBase", "Connection") & "';"
+        Set AF = dd.ExecuteSql(Sql, cn)
+    
+        For i = 1 To AF.Rows
+            CurrentDb.Execute "Insert Into Classe(Id, Projeto) Values('" & AF.GetItemXY(i, 1) & "','" & DLookup("DataBase", "Connection") & "')"
+            m_GerarCodigo.GerarDoBanco AF.GetItemXY(i, 1)
+        Next
+    End If
+    
+    Me.subClasses.Requery
+End Sub
+
+Private Sub Texto52_Click()
+Me.txtModelo = m_GeraMetodos.getModeloAtriburosPrivados
+End Sub
+
+Private Sub Texto54_Click()
+Me.txtModelo = ""
+Dim texto As String
+If Me.Quadro67 = 1 Then
+    Dim rs As DAO.Recordset
+    Set rs = CurrentDb.OpenRecordset("Select * from atributos where ClasseId='" & Me.Id & "' Order By Posicao, Id")
+    texto = Me.txtModelo & ""
+    Do Until rs.EOF
+        texto = m_GeraMetodos.atributosPrivados(rs("Nome"), rs("TipoDado"), texto)
+        texto = m_GeraMetodos.getLetSet(rs("Nome"), rs("TipoDado"), texto, rs("Objeto"), rs("autoincremento"))
+        rs.MoveNext
+    Loop
+    Me.txtModelo = texto
+ElseIf Quadro67 = 2 Then
+texto = DLookup("modelo", "modelos", "Id='servicos'")
+texto = Replace(texto, "@Class", Me.Id)
+Me.txtModelo = texto
+ElseIf Quadro67 = 3 Then
+
+
+End If
+End Sub
+
+Private Sub Texto55_Click()
+    Me.txtModelo = ""
+End Sub
+
+
+Private Sub Texto56_Click()
+Dim texto As String
+If Me.Quadro67 = 1 Then
+    If Not m_CreateObject.Existe(Me.Id) Then
+
+        texto = Replace(Me.txtModelo, "@@Classe", Me.Id)
+        Call m_CreateObject.CreateObjectClass(Me.Id, texto)
+        MsgBox "Sucesso...", vbInformation, "Atenção"
+    Else
+        MsgBox "Classe já existe...", vbCritical, "Atenção"
+    End If
+ElseIf Me.Quadro67 = 2 Then
+    If Not m_CreateObject.Existe(Me.Id + "Services") Then
+        texto = Me.txtModelo
+        Call m_CreateObject.CreateObjectClass(Me.Id + "Services", texto)
+        Call AddServives(Me.Id)
+        MsgBox "Sucesso...", vbInformation, "Atenção"
+    Else
+        MsgBox "Classe já existe...", vbCritical, "Atenção"
+    End If
+ElseIf Me.Quadro67 = 3 Then
+        CriarForm Me.Id
+        texto = m_CreateObject.GetTextoParaForm(Me.Id)
+        m_CreateObject.EscreverEmForm Me.Id, texto
+        MsgBox "Sucesso...", vbInformation, "Atenção"
+End If
+End Sub
+Private Sub CriarForm(NomeClasse As String)
+    Dim rs As DAO.Recordset
+    Set rs = CurrentDb.OpenRecordset("Select * from Atributos Where ClasseId='" & NomeClasse & "'")
+    m_CreateObject.CreateItensForm NomeClasse, rs
+End Sub

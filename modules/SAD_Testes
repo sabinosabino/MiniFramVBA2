@@ -1,0 +1,13 @@
+Attribute VB_Name = "SAD_Testes"
+Option Compare Database
+Sub Teste()
+    Dim dd As New DataDAO
+    Dim AF As ArrayFactory
+    Dim x As Long
+    Set AF = dd.ExecuteSql("Select * from produtos", New Connect)
+    
+    For x = 1 To AF.Rows
+        Debug.Print AF.GetItem(x, "Id"), AF.GetItem(x, "Nome"), AF.GetItem(x, "ValorProduto")
+    Next
+    
+End Sub
