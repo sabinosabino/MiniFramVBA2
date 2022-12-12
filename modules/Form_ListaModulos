@@ -10,6 +10,7 @@ Attribute VB_Exposed = False
 Option Compare Database
 
 Private Sub cmdExportar_Click()
+    CurrentDb.Execute "UPDATE [Connection] SET [Server]='',[User]='',[Pwd]='',[DataBase]=''"
     Call ExtratorModulos.ComitarProjeto
     MsgBox "Sucesso!"
 End Sub
