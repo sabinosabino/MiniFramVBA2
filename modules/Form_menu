@@ -50,7 +50,7 @@ Private Sub Texto52_Click()
 Me.txtModelo = m_GeraMetodos.getModeloAtriburosPrivados
 End Sub
 
-Private Sub Texto54_Click()
+Private Sub Comando77_Click()
 Me.txtModelo = ""
 Dim texto As String
 If Me.Quadro67 = 1 Then
@@ -71,6 +71,42 @@ ElseIf Quadro67 = 3 Then
 
 
 End If
+End Sub
+
+Private Sub Comando78_Click()
+Dim texto As String
+If Me.Quadro67 = 1 Then
+    If Not m_CreateObject.Existe(Me.Id) Then
+
+        texto = Replace(Me.txtModelo, "@@Classe", Me.Id)
+        Call m_CreateObject.CreateObjectClass(Me.Id, texto)
+        MsgBox "Sucesso...", vbInformation, "Atenção"
+    Else
+        MsgBox "Classe já existe...", vbCritical, "Atenção"
+    End If
+ElseIf Me.Quadro67 = 2 Then
+    If Not m_CreateObject.Existe(Me.Id + "Services") Then
+        texto = Me.txtModelo
+        Call m_CreateObject.CreateObjectClass(Me.Id + "Services", texto)
+        Call AddServives(Me.Id)
+        MsgBox "Sucesso...", vbInformation, "Atenção"
+    Else
+        MsgBox "Classe já existe...", vbCritical, "Atenção"
+    End If
+ElseIf Me.Quadro67 = 3 Then
+        CriarForm Me.Id
+        texto = m_CreateObject.GetTextoParaForm(Me.Id)
+        m_CreateObject.EscreverEmForm Me.Id, texto
+        MsgBox "Sucesso...", vbInformation, "Atenção"
+End If
+End Sub
+
+Private Sub Comando81_Click()
+Me.txtModelo = ""
+End Sub
+
+Private Sub Texto54_Click()
+
 End Sub
 
 Private Sub Texto55_Click()
@@ -109,4 +145,8 @@ Private Sub CriarForm(NomeClasse As String)
     Dim rs As DAO.Recordset
     Set rs = CurrentDb.OpenRecordset("Select * from Atributos Where ClasseId='" & NomeClasse & "'")
     m_CreateObject.CreateItensForm NomeClasse, rs
+End Sub
+
+Private Sub Documentar_Click()
+    DoCmd.OpenForm "SAD_Documentacao_Modulos"
 End Sub

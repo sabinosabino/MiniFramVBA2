@@ -2,16 +2,16 @@ Attribute VB_Name = "SAD_Documentacao"
 Option Compare Database
 
 Public Sub PercorreModulosEClasses()
-    Dim v As VBIDE.VBE
-    Dim m As VBIDE.CodeModule
-    Dim Cs As VBIDE.VBComponents
-    Dim c As VBIDE.VBComponent
+    Dim v As Object
+    Dim m As Object
+    Dim Cs As Object
+    Dim c As Object
     Set v = Application.VBE
     
     Set Cs = v.ActiveVBProject.VBComponents
     RedefinirAtivos
     For Each c In Cs
-        If c.Type = vbext_ct_StdModule Or c.Type = vbext_ct_ClassModule Then
+        If c.Type = 1 Or c.Type = 2 Then
             SeparaProcedimentosCriaObjetoDocumentacao c
         End If
     Next
@@ -21,7 +21,7 @@ End Sub
 Private Sub RedefinirAtivos()
     CurrentDb.Execute "Update SAD_Documentacao_Modulos Set Ativo=0"
 End Sub
-Private Sub SeparaProcedimentosCriaObjetoDocumentacao(Componente As VBIDE.VBComponent)
+Private Sub SeparaProcedimentosCriaObjetoDocumentacao(Componente As Object)
     Dim Linhas As Integer
     Dim i As Integer
     Linhas = Componente.CodeModule.CountOfLines
