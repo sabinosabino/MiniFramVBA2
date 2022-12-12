@@ -152,7 +152,7 @@ If Me.Rows = 0 Then
 End If
 
 Dim x As Long
-Dim Y As Long
+Dim y As Long
 Dim Xupper As Long
 Dim Yupper As Long
 Dim tempArray As Variant
@@ -160,9 +160,9 @@ Dim tempArray As Variant
     Yupper = UBound(ArrayTemp, 1)
     ReDim tempArray(Xupper, Yupper)
     For x = 0 To Xupper
-        For Y = 0 To Yupper
-            tempArray(x, Y) = ArrayTemp(Y, x)
-        Next Y
+        For y = 0 To Yupper
+            tempArray(x, y) = ArrayTemp(y, x)
+        Next y
     Next x
     ArrayTemp = tempArray
 End Sub

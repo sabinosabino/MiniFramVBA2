@@ -27,7 +27,11 @@ Private Sub cmdclose_Click()
 End Sub
 
 Private Sub cmdDicionario_Click()
-    m_DicionarioDados.GerarDicionarioDados
+    If m_Util.GetTipeProvider = 1 Then 'sqlserver
+        m_DicionarioDados.GerarDicionarioDados
+    ElseIf m_Util.GetTipeProvider = 2 Then 'mysql
+        m_DicionarioDados.GerarDicionarioDadosmysql
+    End If
     Me.cboSchema.Requery
 End Sub
 

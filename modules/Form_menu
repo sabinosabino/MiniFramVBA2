@@ -147,6 +147,10 @@ Private Sub CriarForm(NomeClasse As String)
     m_CreateObject.CreateItensForm NomeClasse, rs
 End Sub
 
+Private Sub Comando94_Click()
+    DoCmd.OpenForm "SAD_DicionarioDados"
+End Sub
+
 Private Sub Documentar_Click()
     DoCmd.OpenForm "SAD_Documentacao_Modulos"
 End Sub
