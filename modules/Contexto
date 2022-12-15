@@ -15,6 +15,7 @@ End Sub
 '-------------------------------------------------------------------------------------------------------------------------------
 'Deixe a palavra @@Reservado
 'Public Property Get @@Classe() As @@ClasseServices: Set @@Classe = New @@ClasseServices: Call @@Classe.SetConn(conn): End Property
+Public Property Get Produtos() As ProdutosServices: Set Produtos = New ProdutosServices: Call Produtos.SetConn(conn): End Property
 '@@Reservado
 '-------------------------------------------------------------------------------------------------------------------------------
 Private Sub Class_Terminate()

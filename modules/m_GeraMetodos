@@ -93,9 +93,9 @@ End Function
 Public Sub AtualizarCampo(classenome As String, NomeCampo As String, TipoDado As String, Optional Objeto As Boolean = False)
 Dim textotemp As String
 Dim texto As String
-Dim Vbcoms As VBIDE.VBComponents
+Dim Vbcoms As Object
 Set Vbcoms = Application.VBE.ActiveVBProject.VBComponents
-Dim obj As VBIDE.VBComponent
+Dim obj As Object
         If Not Objeto Then
             textotemp = "private p" & NomeCampo & " As " & TipoDado + vbNewLine + "'@@atributosprivados"
         Else

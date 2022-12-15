@@ -1,0 +1,73 @@
+VERSION 1.0 CLASS
+BEGIN
+  MultiUse = -1  'True
+END
+Attribute VB_Name = "Produtos"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = False
+Attribute VB_Exposed = False
+Option Compare Database
+
+Option Explicit
+
+Private pId As Integer
+Private pNome As String
+Private pUnidadeMedida As String
+Private pDataCadastro As Date
+Private pValorProduto As Double
+'@@atributosprivados
+Private fields As Collection
+Private valuefields As Collection
+Public parameter As ParameterSql
+Private Sub Class_Initialize()
+     Set parameter = New ParameterSql: parameter.NameTable = "Produtos"
+     '@@ReservadoInicilize
+End Sub
+Public Property Let Id(ByVal value As Integer)
+       pId = value: parameter.CollectionFields.Add ("Id"): parameter.CollectionValues.Add (pId)
+End Property
+Public Property Get Id() As Integer
+       Id = pId
+End Property
+Public Property Let Nome(ByVal value As String)
+       pNome = value: parameter.CollectionFields.Add ("Nome"): parameter.CollectionValues.Add (pNome)
+End Property
+Public Property Get Nome() As String
+       Nome = pNome
+End Property
+Public Property Let UnidadeMedida(ByVal value As String)
+       pUnidadeMedida = value: parameter.CollectionFields.Add ("UnidadeMedida"): parameter.CollectionValues.Add (pUnidadeMedida)
+End Property
+Public Property Get UnidadeMedida() As String
+       UnidadeMedida = pUnidadeMedida
+End Property
+Public Property Let DataCadastro(ByVal value As Date)
+       pDataCadastro = value: parameter.CollectionFields.Add ("DataCadastro"): parameter.CollectionValues.Add (pDataCadastro)
+End Property
+Public Property Get DataCadastro() As Date
+       DataCadastro = pDataCadastro
+End Property
+Public Property Let ValorProduto(ByVal value As Double)
+       pValorProduto = value: parameter.CollectionFields.Add ("ValorProduto"): parameter.CollectionValues.Add (pValorProduto)
+End Property
+Public Property Get ValorProduto() As Double
+       ValorProduto = pValorProduto
+End Property
+'@@ReservadoLetGet
+Private Sub Class_Terminate()
+    Set fields = Nothing
+    Set valuefields = Nothing
+    Set parameter = Nothing
+    '@@ReservadoTerminate
+End Sub
+Public Function getInstace(AF As ArrayFactory, row As Long) As Produtos
+        pId = m_Util.NullForData(AF.GetItem(row, "Id"))
+        pNome = m_Util.NullForData(AF.GetItem(row, "Nome"))
+        pUnidadeMedida = m_Util.NullForData(AF.GetItem(row, "UnidadeMedida"))
+        pDataCadastro = m_Util.NullForData(AF.GetItem(row, "DataCadastro"), 2)
+        pValorProduto = m_Util.NullForData(AF.GetItem(row, "ValorProduto"))
+        '@@ReservadoGetInstace
+        Set getInstace = Me
+End Function
+

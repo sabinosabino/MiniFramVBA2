@@ -110,11 +110,11 @@ Public Sub AddServives(nameClasse As String)
 Dim textotemp As String
 textotemp = "Public Property Get @@Classe() As @@ClasseServices: Set @@Classe = New @@ClasseServices: Call @@Classe.SetConn(conn): End Property" & vbNewLine & "'@@Reservado"
 textotemp = Replace(textotemp, "@@Classe", nameClasse)
-    Dim Vbcoms As VBIDE.VBComponents
+    Dim Vbcoms As Object
     Set Vbcoms = Application.VBE.ActiveVBProject.VBComponents
     
     Dim texto As String
-    Dim obj As VBIDE.VBComponent
+    Dim obj As Object
     For Each obj In Vbcoms
         If obj.Name = "Contexto" Then
             texto = obj.CodeModule.Lines(1, obj.CodeModule.CountOfLines)
