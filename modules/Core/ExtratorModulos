@@ -18,7 +18,7 @@ Set Vbcoms = Application.VBE.ActiveVBProject.VBComponents
     Call VerificaPastaExiste("Formularios")
     Call VerificaPastaExiste("Relatorios")
     Call VerificaPastaExiste("Outros")
-    Call VerificaPastaExiste("ArquivosSistema")
+    Call VerificaPastaExiste("Core")
     For Each Vbcom In Vbcoms
         'se for access usar currentproject no lugar de activeWorkbook
         Vbcom.Export getPath() & "\modules\" + PathFolder(Vbcom.Name) + "\" & Vbcom.Name
@@ -77,7 +77,7 @@ Private Function PathFolder(value As String) As String
     & "ArrayFactory/Connect/Contexto/DataDAO/DataLayer/ParameterSql/PreConnection/SAD_Object_Documentacao/ToSheet/"
     
     If InStr(1, SadSistema, "/" & value & "/") > 0 Then
-        PathFolder = "ArquivosSistema"
+        PathFolder = "Core"
     ElseIf InStr(1, value, "Form_") > 0 Then
         PathFolder = "Formularios"
     ElseIf InStr(1, value, "Report_") > 0 Then
