@@ -27,3 +27,5 @@ Private Sub Form_Load()
     
     Me.lst.RowSource = texto
 End Sub
+
+

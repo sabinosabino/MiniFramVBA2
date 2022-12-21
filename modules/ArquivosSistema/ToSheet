@@ -8,7 +8,7 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Compare Database
-Public Sub ExportExcel(obj As Object, Path As String)
+Public Sub ExportExcel(obj As Object, path As String)
     On Error GoTo catch
     Dim ap As Object: Set ap = CreateObject("Excel.Application")
     Dim wb As Object
@@ -20,7 +20,7 @@ Public Sub ExportExcel(obj As Object, Path As String)
         ws.Cells(1, iCols + 1).value = obj.fields(iCols).Name
     Next
     Call ws.Range("A2").CopyFromRecordset(obj)
-    wb.SaveAs Path & "\" & Format(Now, "ddmmyyyhh_mm_ss") & ".xlsx"
+    wb.SaveAs path & "\" & Format(Now, "ddmmyyyhh_mm_ss") & ".xlsx"
     wb.Close
     Set wb = Nothing
     Set App = Nothing

@@ -9,17 +9,21 @@ Private Vbcoms As Object
 Private Vbcom As Object
 Private Function getPath() As String
     'se for access usar currentproject no lugar de activeWorkbook
-    getPath = CurrentProject.Path
+    getPath = CurrentProject.path
 End Function
 Private Sub Extrair()
 On Error GoTo 1
 Set Vbcoms = Application.VBE.ActiveVBProject.VBComponents
-If VerificaPastaExiste Then
+    Call VerificaPastaExiste("", True)
+    Call VerificaPastaExiste("Formularios")
+    Call VerificaPastaExiste("Relatorios")
+    Call VerificaPastaExiste("Outros")
+    Call VerificaPastaExiste("ArquivosSistema")
     For Each Vbcom In Vbcoms
         'se for access usar currentproject no lugar de activeWorkbook
-        Vbcom.Export getPath() & "\modules\" & Vbcom.Name
+        Vbcom.Export getPath() & "\modules\" + PathFolder(Vbcom.Name) + "\" & Vbcom.Name
     Next
-End If
+
 Debug.Print "SUCESSO!!!"
 Dim Comentario As String
 If MsgBox("Deseja comitar?", vbYesNo, "Atenção") = vbYes Then
@@ -31,17 +35,21 @@ Exit Sub
 1:
 MsgBox Err.Description, vbCritical, "Atenção."
 End Sub
-Private Function VerificaPastaExiste() As Boolean
+Private Function VerificaPastaExiste(value As String, Optional module As Boolean) As Boolean
 Dim fso As Object
-Dim Caminho As String
-Caminho = getPath() & "\modules"
+Dim caminho As String
+If module Then
+    caminho = getPath() & "\modules"
+Else
+    caminho = getPath() & "\modules\" + value
+End If
 Set fso = CreateObject("Scripting.FileSystemObject")
-If fso.FolderExists(Caminho) Then
-    Call fso.DeleteFolder(Caminho)
-    Call fso.createfolder(Caminho)
+If fso.FolderExists(caminho) Then
+    Call fso.DeleteFolder(caminho)
+    Call fso.createfolder(caminho)
     VerificaPastaExiste = True
 Else
-    Call fso.createfolder(Caminho)
+    Call fso.createfolder(caminho)
     VerificaPastaExiste = True
 End If
 
@@ -62,3 +70,19 @@ Private Sub ComandoGit(Optional Comentario As String)
     cmm = cmm & " & " & "exit"
     Call VBA.SendKeys(cmm)
 End Sub
+Private Function PathFolder(value As String) As String
+    Dim SadSistema As String
+    Dim SadDemais As String
+    SadSistema = "/ExtratorModulos/m_CreateObject/m_DicionarioDados/m_GeraMetodos/m_GerarCodigo/m_Util/SAD_Documentacao/" _
+    & "ArrayFactory/Connect/Contexto/DataDAO/DataLayer/ParameterSql/PreConnection/SAD_Object_Documentacao/ToSheet/"
+    
+    If InStr(1, SadSistema, "/" & value & "/") > 0 Then
+        PathFolder = "ArquivosSistema"
+    ElseIf InStr(1, value, "Form_") > 0 Then
+        PathFolder = "Formularios"
+    ElseIf InStr(1, value, "Report_") > 0 Then
+        PathFolder = "Relatorios"
+    Else
+        PathFolder = "Outros"
+    End If
+End Function

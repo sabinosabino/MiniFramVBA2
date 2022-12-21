@@ -33,7 +33,7 @@ Private Sub Capiturar_Click()
             CurrentDb.Execute "Insert Into Classe(Id, Projeto) Values('" & AF.GetItemXY(i, 3) & "','" & AF.GetItemXY(i, 1) & "')"
             m_GerarCodigo.GerarDoBanco AF.GetItemXY(i, 3)
         Next
-    Else
+    ElseIf GetTipeProvider = 2 Then
         Sql = "SELECT table_name FROM information_schema.tables WHERE table_schema = '" & DLookup("DataBase", "Connection") & "';"
         Set AF = dd.ExecuteSql(Sql, cn)
     
@@ -41,6 +41,8 @@ Private Sub Capiturar_Click()
             CurrentDb.Execute "Insert Into Classe(Id, Projeto) Values('" & AF.GetItemXY(i, 1) & "','" & DLookup("DataBase", "Connection") & "')"
             m_GerarCodigo.GerarDoBanco AF.GetItemXY(i, 1)
         Next
+    ElseIf GetTipeProvider = 3 Then
+        MsgBox "Atidade ainda não disponível para MS Access...", vbCritical, "Atenção"
     End If
     
     Me.subClasses.Requery

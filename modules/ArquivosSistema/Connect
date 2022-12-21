@@ -60,7 +60,12 @@ Private Function StringConnection() As String
         'mysql
         Case 2
             StringConnection = GetStringMysql
+        Case 3
+            StringConnection = GetStringMSAccess
     End Select
+End Function
+Public Function GetStringMSAccess() As String
+    GetStringMSAccess = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & Server & "\" & DataBase & ";Jet OLEDB:Database Password=" & Pwd & ";"
 End Function
 Public Function GetTypeProvider() As Integer
     

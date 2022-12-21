@@ -63,6 +63,8 @@ On Error GoTo catch
         TOP = " TOP (1000)"
     ElseIf GetTipeProvider = 2 Then
         Limite = " LIMIT 1000"
+    ElseIf GetTipeProvider = 3 Then
+        TOP = " TOP 1000"
     Else
     'outros
     End If
@@ -226,6 +228,9 @@ Public Static Function selectValueFormatedType(ByVal elemento) As String
             ElseIf GetTipeProvider = 2 Then
                 'mysql
                 selectValueFormatedType = VBA.Chr(39) & Format(elemento, "yyyy-mm-dd hh:mm:ss") & VBA.Chr(39)
+            ElseIf GetTipeProvider = 3 Then
+                'mysql
+                selectValueFormatedType = "#" & Format(elemento, "mm-dd-yyyy hh:mm:ss") & "#"
             End If
     
         Case VbVarType.vbNull

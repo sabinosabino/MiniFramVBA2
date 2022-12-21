@@ -27,3 +27,26 @@ End Sub
 Private Sub Comando46_Click()
     MsgBox "Caso você possua um formulário modelo ele crirá nesse formuário os campos das classes para você.", vbInformation, "O que é?"
 End Sub
+
+Private Sub Form_Load()
+    Call Provedor_AfterUpdate
+End Sub
+
+Private Sub Provedor_AfterUpdate()
+    If Me.Provider = 3 Then
+        Me.selecionaPath.Visible = True
+    Else
+        Me.selecionaPath.Visible = False
+    End If
+End Sub
+
+Private Sub selecionaPath_Click()
+Dim caminho As String
+Dim arr As Variant
+caminho = fncLocalizarArquivo(3)
+If caminho = "" Then Exit Sub
+arr = Split(caminho, "\")
+Me.DataBase = arr(UBound(arr))
+Me.Server = Replace(caminho, Me.DataBase, "")
+Me.Server = Mid(Me.Server, 1, Len(Me.Server) - 1)
+End Sub
