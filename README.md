@@ -1,3 +1,3 @@
-# MiniFramVBA2
+# Core
 
 Arquivos fundamentais para funcionamento do sistema
